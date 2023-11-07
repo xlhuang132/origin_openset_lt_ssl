@@ -113,7 +113,7 @@ def get_cifar100(root, out_dataset, start_label=0,ood_ratio=0,
         logger.info(
             "=> number of unlabeled OOD data: {}\n".format( ul_train.ood_num)
         ) 
-    if cfg.ALGORITHM.PRE_TRAIN.SimCLR.ENABLE:
+    if cfg.ALGORITHM.PRE_TRAIN.ENABLE:
         train_dataset =CIFAR100Dataset(total_train,transforms=transform_train_ul,num_classes=num_classes)
         transform_pre=build_simclr_transform(cfg)
         pre_train_dataset  =  CIFAR100Dataset(total_train,transforms=transform_pre,num_classes=num_classes)

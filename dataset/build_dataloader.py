@@ -196,7 +196,7 @@ def build_dataloader(cfg,logger=None,test_mode=False):
     train_domain_set=datasets[2]
     val_set=datasets[3]
     test_set=datasets[4]
-    if cfg.ALGORITHM.PRE_TRAIN.SimCLR.ENABLE:
+    if cfg.ALGORITHM.PRE_TRAIN.ENABLE:
         pre_train_set=datasets[5]
         pre_train_loader=data.DataLoader(
             pre_train_set, batch_size=batch_size, 
@@ -253,7 +253,7 @@ def build_dataloader(cfg,logger=None,test_mode=False):
             shuffle=False
         )
     
-    if cfg.ALGORITHM.PRE_TRAIN.SimCLR.ENABLE  :
+    if cfg.ALGORITHM.PRE_TRAIN.ENABLE  :
         return  domain_trainloader,labeled_trainloader,unlabeled_trainloader,val_loader,test_loader,dual_labeled_trainloader,pre_train_loader
     else:
         return  domain_trainloader,labeled_trainloader,unlabeled_trainloader,val_loader,test_loader,dual_labeled_trainloader
