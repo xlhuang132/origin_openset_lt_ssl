@@ -123,10 +123,13 @@ class Resnet34_(nn.Module):
         # encoder
         self.encoder = nn.Sequential(*self.f)
         self.fc=nn.Linear(512, num_classes, bias=False)
+        self.fc1=nn.Linear(512, num_classes, bias=False)
     
     def forward(self, x,**kwargs):
         if 'classifier' in kwargs:
             return self.fc(x)  
+        if 'classifier1' in kwargs:
+            return self.fc1(x)  
         feature=self.encoder(x)
         encoding = feature.view(feature.size(0), -1) 
         if 'return_encoding'in kwargs:            

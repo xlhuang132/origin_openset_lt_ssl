@@ -7,3 +7,4 @@ from .crest_trainer import CReSTTrainer
 from .supervised_trainer import SupervisedTrainer
 from .pseudolabel_trainer import PseudoLabelTrainer
 from .build_trainer import build_trainer
+from .acr_trainer import ACRTrainer

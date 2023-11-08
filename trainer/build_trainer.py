@@ -7,6 +7,8 @@ from .mixmatch_trainer import MixMatchTrainer
 from .crest_trainer import CReSTTrainer
 from .supervised_trainer import SupervisedTrainer
 from .pseudolabel_trainer import PseudoLabelTrainer
+from .acr_trainer import ACRTrainer
+
 def build_trainer(cfg):
     alg=cfg.ALGORITHM.NAME
     if alg=='MOOD':
@@ -23,5 +25,7 @@ def build_trainer(cfg):
         return DASOTrainer(cfg)
     elif alg=='PseudoLabel':
         return PseudoLabelTrainer(cfg)
+    elif alg=='ACR':
+        return ACRTrainer(cfg)
     else:
         raise "The algorithm type is not valid!"

@@ -165,8 +165,9 @@ class BaseTrainer():
                 self.losses = AverageMeter()
                 self.losses_x = AverageMeter()
                 self.losses_u = AverageMeter()                 
-                start_time = time.time()   
+                start_time = time.time()    
                 self.operate_after_epoch()
+                
                 
         self.plot()       
         return

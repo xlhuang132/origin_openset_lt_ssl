@@ -5,8 +5,8 @@ OUTPUT_DIR: "outputs/" # 0.1* id loss + 0.1*ood loss + EMA更新特征 + 更新�
 SEED : 7  
 SHOW_STEP: 100
 SAVE_EPOCH: 100
-MAX_EPOCH: 500
-VAL_ITERATION: 100 
+MAX_EPOCH: 300
+VAL_ITERATION: 500 
 
 ALGORITHM:
   NAME: "MOOD"
@@ -16,7 +16,7 @@ ALGORITHM:
     TEMPERATURE: 0.5 # ?
     MIXUP_ALPHA: 0.5 
     WARMUP_TEMPERATURE: 0.5
-    WARMUP_ITER: 500
+    WARMUP_ITER: 50000
     FEATURE_LOSS_TEMPERATURE: 0.5
     PAP_LOSS_WEIGHT: 1. 
     OOD_DETECTOR:
@@ -32,8 +32,8 @@ ALGORITHM:
     OOD_DETECTION: False 
     PAP_LOSS: False
 
-  # PRE_TRAIN: 
-  #   ENABLE: True
+  PRE_TRAIN: 
+    ENABLE: True
   #   WARMUP_EPOCH: 5
   #   SimCLR: 
   #     ENABLE: True
@@ -79,16 +79,16 @@ DATASET:
   IMB_TYPE: 'exp'
   DL:
     NUM_LABELED_HEAD: 1500
-    IMB_FACTOR_L: 10
+    IMB_FACTOR_L: 100
   DU:
     ID:
       NUM_UNLABELED_HEAD: 3000
-      IMB_FACTOR_UL: 10
+      IMB_FACTOR_UL: 100
       REVERSE_UL_DISTRIBUTION: False
     OOD:
       ENABLE: True
       DATASET: 'TIN'
-      RATIO: 0.75 #  
+      RATIO: 0.5 #  
     
     UNLABELED_BATCH_RATIO: 2
   BATCH_SIZE: 64

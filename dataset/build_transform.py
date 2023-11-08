@@ -4,6 +4,12 @@ import torchvision
 from .transform.rand_augment import RandAugment
 from .transform.transforms import TransformFixMatch,TransformOpenMatch
 from .transform.transforms import SimCLRAugmentation
+
+from dataset.transform.transforms import Augmentation,GeneralizedSSLTransform
+from dataset.transform.randaugment import RandAugmentMC
+from torchvision import transforms
+
+
 cifar10_mean = (0.4914, 0.4822, 0.4465)
 cifar10_std = (0.2471, 0.2435, 0.2616)
 cifar100_mean = (0.5071, 0.4867, 0.4408)
@@ -35,10 +41,30 @@ class TransformTwice:
 #     return transform_train,TransformTwice(transform_train),transform_val
 
  
+class TransformFixMatch(object):
+    def __init__(self, mean, std, img_size=32):
+        self.weak = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=img_size,
+                                  padding=int(img_size*0.125),
+                                  padding_mode='reflect')])
+        self.strong = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=img_size,
+                                  padding=int(img_size*0.125),
+                                  padding_mode='reflect'),
+            RandAugmentMC(n=2, m=10)])
+        self.normalize = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std)])
 
- 
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        strong1 = self.strong(x)
+        return self.normalize(weak), self.normalize(strong), self.normalize(strong1)
+        # return self.normalize(weak), self.normalize(strong)
 
-from dataset.transform.transforms import Augmentation,GeneralizedSSLTransform
  
 def build_simclr_transform(cfg):
     dataset=cfg.DATASET.NAME
@@ -138,7 +164,37 @@ def build_transform(cfg):
         ul_train = GeneralizedSSLTransform(
             [aug(cfg, img_size, norm_params=norm_params, resolution=resolution)]
         ) 
-        
+    elif algo_name == 'ACR':
+        ul_train= GeneralizedSSLTransform(
+            [ 
+                aug(cfg, img_size, norm_params=norm_params, resolution=resolution),  # weak
+                aug(
+                    cfg,
+                    img_size,
+                    strong_aug=True,
+                    norm_params=norm_params,
+                    resolution=resolution,
+                    ra_first=True
+                ),  # strong 1(randaugment)
+                aug(
+                    cfg,
+                    img_size,
+                    strong_aug=True,
+                    norm_params=norm_params,
+                    resolution=resolution,
+                    ra_first=False
+                ),  # strong 2(randaugment)
+                
+                aug(
+                    cfg,
+                    img_size,
+                    norm_params=norm_params,
+                    resolution=resolution,
+                    flip=False,
+                    crop=False
+                ),  # identity
+        ]
+        )
     else:
         ul_train = GeneralizedSSLTransform(
             [
