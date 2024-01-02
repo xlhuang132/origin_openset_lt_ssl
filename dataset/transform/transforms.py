@@ -194,3 +194,50 @@ class SimCLRAugmentation:
         # PIL image type
         assert isinstance(img, Image.Image)
         return self.t(img)
+    
+class EvalAugmentation:
+
+    def __init__(
+        self,
+        cfg=None,
+        img_size=None, 
+    ) : 
+        t = [
+            transforms.CenterCrop(32),
+            transforms.ToTensor(),
+        ]
+        self.t = transforms.Compose(t)
+
+    def __call__(self, img: Union[np.ndarray, Image.Image]) -> Tensor:
+        if isinstance(img, np.ndarray):
+            if img.shape[0] == 3:
+                img = np.moveaxis(img, 0, -1)
+            img = Image.fromarray(img.astype(np.uint8))
+        # PIL image type
+        assert isinstance(img, Image.Image)
+        return self.t(img)
+
+class TrainAugmentation:
+
+    def __init__(
+        self,
+        cfg=None,
+        img_size=None, 
+    ) : 
+        t = [
+            # RandomCrop(32),
+            transforms.RandomResizedCrop(32),
+            # RandomFlip(),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ToTensor(),
+        ]
+        self.t = transforms.Compose(t)
+
+    def __call__(self, img: Union[np.ndarray, Image.Image]) -> Tensor:
+        if isinstance(img, np.ndarray):
+            if img.shape[0] == 3:
+                img = np.moveaxis(img, 0, -1)
+            img = Image.fromarray(img.astype(np.uint8))
+        # PIL image type
+        assert isinstance(img, Image.Image)
+        return self.t(img)
