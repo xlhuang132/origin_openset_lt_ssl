@@ -159,20 +159,29 @@ def _build_loader(
         if total_samples is None:
             total_samples = max_iter * batch_size
         sampler=build_sampler(cfg, dataset,total_samples=total_samples,sampler_type=sampler_name)
-
+     
+        
     # train: drop last true
     # test:  drop last false
     if (not has_label) and is_train and (cfg.ALGORITHM.NAME == "DARP_ESTIM"):
         sampler = None
-
-    data_loader = data.DataLoader(
-        dataset,
-        batch_size=batch_size,
-        num_workers=cfg.DATASET.NUM_WORKERS,
-        drop_last=drop_last,
-        sampler=sampler,
-        shuffle=False
-    )
+    if sampler is not None:
+        data_loader = data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=cfg.DATASET.NUM_WORKERS,
+            drop_last=drop_last,
+            sampler=sampler,
+            shuffle=False
+        )
+    else:
+        data_loader = data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            num_workers=cfg.DATASET.NUM_WORKERS,
+            drop_last=drop_last, 
+            shuffle=False
+        )
     return data_loader
 
 def build_dataloader(cfg,logger=None,test_mode=False):

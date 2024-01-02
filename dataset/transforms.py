@@ -22,10 +22,11 @@ class RandomCrop(object):
         h, w = x.shape[1:]
         new_h, new_w = self.output_size
 
-        top = np.random.randint(0, h - new_h)
-        left = np.random.randint(0, w - new_w)
+        if h - new_h >0:
+            top = np.random.randint(0, h - new_h)
+            left = np.random.randint(0, w - new_w)
 
-        x = x[:, top: top + new_h, left: left + new_w]
+            x = x[:, top: top + new_h, left: left + new_w]
 
         return x
 

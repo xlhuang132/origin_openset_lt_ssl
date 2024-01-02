@@ -27,7 +27,7 @@ class MOODTrainer(BaseTrainer):
         super().__init__(cfg)      
         
         self.queue = FeatureQueue(cfg, classwise_max_size=None, bal_queue=True)  
-        self.projector=Projector(cfg).cuda()        
+        # self.projector=Projector(cfg).cuda()        
         self.l_num=len(self.labeled_trainloader.dataset)
         self.ul_num=len(self.unlabeled_trainloader.dataset) 
         self.id_masks=torch.ones(self.ul_num).cuda()
@@ -70,12 +70,13 @@ class MOODTrainer(BaseTrainer):
         
         #2023.11.7
         l_dataset = self.labeled_trainloader.dataset 
-        l_data_np,l_transform = l_dataset.select_dataset(return_transforms=True)
-        new_l_dataset = BaseNumpyDataset(l_data_np, transforms=l_transform,num_classes=self.num_classes)
+        l_data_np,_ = l_dataset.select_dataset(return_transforms=True)
+        _,trans=self.test_loader.dataset.select_dataset(return_transforms=True)
+        new_l_dataset = BaseNumpyDataset(l_data_np, transforms=trans,num_classes=self.num_classes)
         self.test_labeled_trainloader = _build_loader(self.cfg, new_l_dataset,is_train=False)
         ul_dataset = self.unlabeled_trainloader.dataset 
-        ul_data_np,ul_transform = ul_dataset.select_dataset(return_transforms=True)
-        new_ul_dataset = BaseNumpyDataset(ul_data_np, transforms=ul_transform,num_classes=self.num_classes)
+        ul_data_np,_ = ul_dataset.select_dataset(return_transforms=True)
+        new_ul_dataset = BaseNumpyDataset(ul_data_np, transforms=trans,num_classes=self.num_classes)
         self.test_unlabeled_trainloader = _build_loader(self.cfg, new_ul_dataset,is_train=False)
         self.loss_init()
         
@@ -114,10 +115,12 @@ class MOODTrainer(BaseTrainer):
         # out_1 = self.model(weak,return_encoding=True) 
         # out_2 = self.model(strong,return_encoding=True) 
         
-        out_1 = self.model(inputs_x,return_encoding=True) 
+        out_1 = self.model(inputs_x,return_encoding=True) #torch.Size([64, 3, 32, 32])
         out_2 = self.model(inputs_x2,return_encoding=True) 
-        out_1=self.projector(out_1)        
-        out_2=self.projector(out_2)
+        # out_1=self.projector(out_1)        
+        # out_2=self.projector(out_2)
+        out_1=self.model.project_feature(out_1)        
+        out_2=self.model.project_feature(out_2)  
         # with torch.no_grad():  
         #     self.queue.enqueue(out_1[:targets_x.size(0)].clone().detach(), targets_x.clone().detach())
         similarity  = pairwise_similarity(out_1,out_2,temperature=self.warmup_temperature) 
@@ -190,7 +193,7 @@ class MOODTrainer(BaseTrainer):
         l_logits = self.model(l_feature,classifier=True)
         # 1. dl ce loss
         cls_loss = self.l_criterion(l_logits, targets_x)
-        loss_dict.update({"loss_cls": cls_loss})
+        # loss_dict.update({"loss_cls": cls_loss})
         # compute 1st branch accuracy
         score_result = self.func(l_logits)
         now_result = torch.argmax(score_result, 1)          
@@ -212,15 +215,18 @@ class MOODTrainer(BaseTrainer):
         cons_loss = self.ul_criterion(
             logits_strong, pred_class, weight=loss_weight, avg_factor=logits_weak.size(0)
         )
-        loss_dict.update({"loss_cons": cons_loss})
+        # loss_dict.update({"loss_cons": cons_loss})
         
-        l_feature2=self.projector(l_feature)
+        # l_feature2=self.projector(l_feature)
+        l_feature2=self.model.project_feature(l_feature)
         with torch.no_grad():     
             self.queue.enqueue(l_feature2.clone().detach(), targets_x.clone().detach())
-             
+        
+        pap_loss=torch.tensor(0.0).cuda()
         # 3. pap loss
         if not self.ablation_enable or self.ablation_enable and self.pap_loss_enable:
-            ul_feature2=self.projector(ul_feature)                      
+            # ul_feature2=self.projector(ul_feature)     
+            ul_feature2=self.model.project_feature(ul_feature)
             ul_feature_weak,ul_feature_strong=ul_feature2.chunk(2)
             all_features=torch.cat((l_feature2,ul_feature_weak),dim=0)
             all_target=torch.cat((targets_x,pred_class),dim=0)
@@ -239,11 +245,11 @@ class MOODTrainer(BaseTrainer):
                     self.logger.info("Loodfeat : {}".format(Loodfeat.item()))
                     
                 self.losses_pap_ood.update(Loodfeat.item(), ood_mask.sum())   
-            pap_loss=  self.pap_loss_weight*(Lidfeat+Loodfeat)
-            loss_dict.update({"pap_loss": pap_loss}) 
+            pap_loss= self.pap_loss_weight*(Lidfeat+Loodfeat)
+            # loss_dict.update({"pap_loss": pap_loss}) 
             
-            
-        loss = sum(loss_dict.values())
+        loss=cons_loss+cls_loss+pap_loss
+        # loss = sum(loss_dict.values())
         # compute gradient and do SGD step
         self.optimizer.zero_grad()
         loss.backward()
@@ -254,7 +260,7 @@ class MOODTrainer(BaseTrainer):
         self.losses_x.update(cls_loss.item(), inputs_x.size(0))
         self.losses_u.update(cons_loss.item(), inputs_u.size(0)) 
         
-        self.losses_pap.update(pap_loss.item(),inputs_x.size(0)+confidenced_id_mask.sum()+ood_mask.sum())
+        # self.losses_pap.update(pap_loss.item(),inputs_x.size(0)+confidenced_id_mask.sum()+ood_mask.sum())
         
         if self.ema_enable:
             current_lr = self.optimizer.param_groups[0]["lr"]
@@ -325,8 +331,8 @@ class MOODTrainer(BaseTrainer):
             self.detect_ood()
         if self.iter==self.warmup_iter:
             self.save_checkpoint(file_name="warmup_model.pth")
-            self._rebuild_models()
-            self._rebuild_optimizer(self.model)
+            # self._rebuild_models()
+            # self._rebuild_optimizer(self.model)
         ood_pre,ood_rec=self.ood_detect_fusion.get_pre_per_class()[1],self.ood_detect_fusion.get_rec_per_class()[1]
         id_pre,id_rec=self.id_detect_fusion.get_pre_per_class()[1],self.id_detect_fusion.get_rec_per_class()[1]
         self.logger.info("== ood_prec:{:>5.3f} ood_rec:{:>5.3f} id_prec:{:>5.3f} id_rec:{:>5.3f}".\
@@ -346,7 +352,7 @@ class MOODTrainer(BaseTrainer):
             self.cfg.MODEL.EMA_WEIGHT_DECAY,
         )
         # .cuda()  
-        self.projector=Projector(self.cfg).cuda()        
+        # self.projector=Projector(self.cfg).cuda()        
 
     def prepare_feat(self,dataloader,return_confidence=False):
         model=self.get_val_model().eval()
@@ -388,7 +394,7 @@ class MOODTrainer(BaseTrainer):
         # 2023.11.7在分类器前一层的特征norm后效果更好
         l_feat,l_y=self.prepare_feat(self.test_labeled_trainloader)
         l_feat=normalizer(l_feat)
-        u_feat,u_y=self.prepare_feat(self.test_unlabeled_trainloader) 
+        u_feat,u_y=self.prepare_feat(self.test_unlabeled_trainloader)
         u_feat=normalizer(u_feat)
         # du_gt=torch.zeros(self.ul_num) 
         id_mask=torch.zeros(self.ul_num).long().cuda()
@@ -477,7 +483,7 @@ class MOODTrainer(BaseTrainer):
                     'best_val_iter':self.best_val_iter, 
                     'best_val_test': self.best_val_test,
                     'optimizer': self.optimizer.state_dict(),
-                    'projector': self.projector.state_dict(),
+                    # 'projector': self.projector.state_dict(),
                     "prototypes":self.queue.prototypes,
                     # 'bank':self.queue.bank,
                     'id_masks':self.id_masks,
@@ -503,7 +509,7 @@ class MOODTrainer(BaseTrainer):
 
             # load optimizer and scheduler
             self.optimizer.load_state_dict(state_dict["optimizer"]) 
-            self.projector.load_state_dict(state_dict["projector"])
+            # self.projector.load_state_dict(state_dict["projector"])
         try:
             self.id_masks=state_dict['id_masks']
             self.ood_masks=state_dict['ood_masks'] 
@@ -543,7 +549,8 @@ class MOODTrainer(BaseTrainer):
                 inputs=inputs.cuda()
                 targets=targets.long().cuda()
                 feat=self.model(inputs,return_encoding=True)
-                feat=self.projector(feat)
+                # feat=self.projector(feat)
+                feat=self.model.project_feature(feat)
                 features.append(feat.detach())                
                 self.queue.enqueue(feat.clone().detach(), targets.clone().detach())
                 labels.append(targets)

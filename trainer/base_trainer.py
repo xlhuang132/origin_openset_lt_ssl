@@ -121,9 +121,10 @@ class BaseTrainer():
         self.losses = AverageMeter()
         self.losses_x = AverageMeter()
         self.losses_u = AverageMeter() 
-        self.epoch= (self.iter // self.val_iter)+1  
         start_time = time.time()   
         for self.iter in range(self.start_iter, self.max_iter):
+            
+            self.epoch= (self.iter // self.val_iter)+1  
             self.pretraining= self.warmup_enable and self.iter<=self.warmup_iter 
             return_data=self.train_step(self.pretraining)
             if return_data is not None:
@@ -262,18 +263,18 @@ class BaseTrainer():
     def eval_loop(self,model,valloader,criterion):
         losses = AverageMeter() 
         # switch to evaluate mode
-        model.eval()
+        self.model.eval()
  
         fusion_matrix = FusionMatrix(self.num_classes)
         func = torch.nn.Softmax(dim=1)
         with torch.no_grad():
-            for  i, (inputs, targets, _) in enumerate(valloader):
+            for  i, (inputs, targets, _) in enumerate(valloader): #(5000, 32, 32, 3)
                 # measure data loading time 
 
                 inputs, targets = inputs.cuda(), targets.cuda(non_blocking=True)
 
                 # compute output
-                outputs = model(inputs)
+                outputs = self.model(inputs) #torch.Size([64, 32, 28, 0])
                 if len(outputs)==2:
                     outputs=outputs[0]
                 loss = criterion(outputs, targets)

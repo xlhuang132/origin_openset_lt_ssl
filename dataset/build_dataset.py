@@ -5,6 +5,16 @@ from .build_transform import build_transform
 from dataset.ood_dataset_map import ood_dataset_map
 from dataset.ood_dataset import OOD_Dataset
 
+
+def merge_dataset(dataset1,dataset2):
+    dataset1["images"]=np.concatenate((dataset1["images"],dataset2["images"]))
+    dataset1["labels"]=np.concatenate(( dataset1["labels"],dataset2["labels"]))
+    # dataset1.num_per_cls_list+=dataset2.num_per_cls_list
+    # dataset1.total_num+=dataset2.total_num
+    # dataset1.ood_num+=dataset2.ood_num
+    
+    return dataset1
+
 def build_test_dataset(cfg):
     dataset_name=cfg.DATASET.NAME
     root=cfg.DATASET.ROOT

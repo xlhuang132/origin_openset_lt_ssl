@@ -8,6 +8,8 @@ from .crest_trainer import CReSTTrainer
 from .supervised_trainer import SupervisedTrainer
 from .pseudolabel_trainer import PseudoLabelTrainer
 from .acr_trainer import ACRTrainer
+from .t2t_trainer import T2TTrainer
+from .softmatch_trainer import SoftMatchTrainer
 
 def build_trainer(cfg):
     alg=cfg.ALGORITHM.NAME
@@ -17,6 +19,8 @@ def build_trainer(cfg):
         return SupervisedTrainer(cfg)
     elif alg=='FixMatch':
         return FixMatchTrainer(cfg)
+    elif alg=='SoftMatch':
+        return SoftMatchTrainer(cfg)
     elif alg=='MixMatch':
         return MixMatchTrainer(cfg)
     elif alg=='CReST':
@@ -26,6 +30,8 @@ def build_trainer(cfg):
     elif alg=='PseudoLabel':
         return PseudoLabelTrainer(cfg)
     elif alg=='ACR':
-        return ACRTrainer(cfg)
+        return ACRTrainer(cfg)    
+    elif alg=='T2T':
+        return T2TTrainer(cfg)
     else:
         raise "The algorithm type is not valid!"

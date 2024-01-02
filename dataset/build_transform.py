@@ -3,7 +3,7 @@ from .transforms import *
 import torchvision
 from .transform.rand_augment import RandAugment
 from .transform.transforms import TransformFixMatch,TransformOpenMatch
-from .transform.transforms import SimCLRAugmentation
+from .transform.transforms import SimCLRAugmentation,EvalAugmentation,TrainAugmentation
 
 from dataset.transform.transforms import Augmentation,GeneralizedSSLTransform
 from dataset.transform.randaugment import RandAugmentMC
@@ -26,44 +26,47 @@ class TransformTwice:
         return out1, out2
 
 # def build_transform(cfg):    
-#     transform_train =  Compose([
-#         RandomCrop(32),
-#         RandomFlip(),
-#         ToTensor(),
-#     ])
+#     # transform_train =  transforms.Compose([
+#     #     RandomCrop(32),
+#     #     RandomFlip(),
+#     #     ToTensor(),
+#     # ])
+#     transform_train=TrainAugmentation()
 
-#     transform_val = Compose([
-#         CenterCrop(32),
-#         ToTensor(),
-#     ])
+#     # transform_val = Compose([
+#     #     CenterCrop(32),
+#     #     ToTensor(),
+#     # ])
+    
+#     transform_val = EvalAugmentation()
     
    
 #     return transform_train,TransformTwice(transform_train),transform_val
 
  
-class TransformFixMatch(object):
-    def __init__(self, mean, std, img_size=32):
-        self.weak = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(size=img_size,
-                                  padding=int(img_size*0.125),
-                                  padding_mode='reflect')])
-        self.strong = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(size=img_size,
-                                  padding=int(img_size*0.125),
-                                  padding_mode='reflect'),
-            RandAugmentMC(n=2, m=10)])
-        self.normalize = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std)])
+# class TransformFixMatch(object):
+#     def __init__(self, mean, std, img_size=32):
+#         self.weak = transforms.Compose([
+#             transforms.RandomHorizontalFlip(),
+#             transforms.RandomCrop(size=img_size,
+#                                   padding=int(img_size*0.125),
+#                                   padding_mode='reflect')])
+#         self.strong = transforms.Compose([
+#             transforms.RandomHorizontalFlip(),
+#             transforms.RandomCrop(size=img_size,
+#                                   padding=int(img_size*0.125),
+#                                   padding_mode='reflect'),
+#             RandAugmentMC(n=2, m=10)])
+#         self.normalize = transforms.Compose([
+#             transforms.ToTensor(),
+#             transforms.Normalize(mean=mean, std=std)])
 
-    def __call__(self, x):
-        weak = self.weak(x)
-        strong = self.strong(x)
-        strong1 = self.strong(x)
-        return self.normalize(weak), self.normalize(strong), self.normalize(strong1)
-        # return self.normalize(weak), self.normalize(strong)
+#     def __call__(self, x):
+#         weak = self.weak(x)
+#         strong = self.strong(x)
+#         strong1 = self.strong(x)
+#         return self.normalize(weak), self.normalize(strong), self.normalize(strong1)
+#         # return self.normalize(weak), self.normalize(strong)
 
  
 def build_simclr_transform(cfg):

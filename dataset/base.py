@@ -28,7 +28,7 @@ class BaseNumpyDataset(Dataset):
             self.num_per_cls_list = None
 
     def __getitem__(self, idx):
-        img = self.dataset[self.image_key][idx]
+        img = self.dataset[self.image_key][idx] #(32, 32, 3)
         label = -1 if self.is_ul_unknown else self.dataset[self.label_key][idx]
         if self.transforms is not None: 
             img = self.transforms(img)                 

@@ -51,6 +51,30 @@ def get_optimizer(cfg, model):
         raise ValueError("Unknown Optimizer: {}".format(cfg.SOLVER.OPTIM_NAME))
     return optimizer
 
+def get_optimizer_params(cfg, params):
+    """
+    Build an optimizer from config.
+    """ 
+    if cfg.MODEL.OPTIMIZER.TYPE  == "SGD":
+        optimizer = torch.optim.SGD(
+            params,
+            lr=cfg.MODEL.OPTIMIZER.BASE_LR,
+            momentum=cfg.MODEL.OPTIMIZER.MOMENTUM,
+            weight_decay=cfg.MODEL.OPTIMIZER.WEIGHT_DECAY,
+            nesterov=True,
+        )
+    elif cfg.MODEL.OPTIMIZER.TYPE == "Adam":
+        optimizer = torch.optim.Adam(
+            params,
+            lr=cfg.MODEL.OPTIMIZER.BASE_LR, 
+            betas=(0.9, 0.999),
+            eps=1e-8,
+            weight_decay=cfg.MODEL.OPTIMIZER.WEIGHT_DECAY,
+        )
+    else:
+        raise ValueError("Unknown Optimizer: {}".format(cfg.SOLVER.OPTIM_NAME))
+    return optimizer
+
 def get_scheduler(cfg, optimizer):
     if cfg.MODEL.LR_SCHEDULER.TYPE == "multistep":
         scheduler = torch.optim.lr_scheduler.MultiStepLR(

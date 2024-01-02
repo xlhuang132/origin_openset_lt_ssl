@@ -223,7 +223,7 @@ def get_ood_feature_dist_loss(features_u,features_u2,dl_center,ood_mask,cfg):
 def pre_train(model,data_loader,pretrain_optimizer,temperature,logger,show_step,epoch,cfg):
     model.train()
     total_loss, total_num = 0.0, 0 
-    total_step=cfg.TRAIN_STEP
+    total_step=cfg.VAL_ITERATION
     data_iter=iter(data_loader)
     for i in range(total_step):
         try:
@@ -231,12 +231,14 @@ def pre_train(model,data_loader,pretrain_optimizer,temperature,logger,show_step,
         except:
             data_iter=iter(data_loader)
             data=data_iter.next()
-        pos_1=data[0]
-        pos_2=data[1]
-        target=data[2] 
+        pos_1=data[0][0]
+        pos_2=data[0][1]
+        target=data[1] 
         pos_1, pos_2 = pos_1.cuda(non_blocking=True), pos_2.cuda(non_blocking=True)
         _,out_1 = model(pos_1,return_encoding=True)# feature:torch.Size([64, 128])
         _,out_2 = model(pos_2,return_encoding=True)# feature:torch.Size([64, 128])
+        # out_1 = model(pos_1,return_encoding=True)# feature:torch.Size([64, 128])
+        # out_2 = model(pos_2,return_encoding=True)# feature:torch.Size([64, 128])
  
         batch_size=out_1.size(0)
         # [2*B, D]

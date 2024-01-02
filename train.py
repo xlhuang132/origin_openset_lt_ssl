@@ -2,20 +2,30 @@
 import torch 
 import argparse
 from utils.set_seed import set_seed
+from trainer.build_trainer import build_trainer
+from config.defaults import update_config,_C as cfg
+import torch.backends.cudnn as cudnn   
 
-def main(cfg):
-    algor=cfg.ALGORITHM.NAME
-    if algor=='baseline':
-        main_baseline(cfg)
-    elif algor=='MixMatch':
-        main_mixmatch(cfg)
-    elif algor=='MTCF':
-        main_mtcf(cfg)
-    elif algor=='Ours':
-        main_ours(cfg) 
-    elif algor=='DASO':
-        main_daso(cfg)    
-    return 
+def parse_args():
+    parser = argparse.ArgumentParser(description="codes for Moving Center")
+
+    parser.add_argument(
+        "--cfg",
+        help="decide which cfg to use",
+        required=False,
+        default="cfg/moving_center_cifar10.yaml",
+        type=str,
+    ) 
+    
+    parser.add_argument(
+        "opts",
+        help="modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
+
+    args = parser.parse_args()
+    return args 
 
 if __name__ == "__main__":
     args = parse_args()
@@ -32,8 +42,8 @@ if __name__ == "__main__":
     #       
     #     
  
-    IF=[50,100]
-    ood_r=[ 0.5]
+    IF=[100]
+    ood_r=[0.75]
     for if_ in IF:  # if
         # 同分布
         for r in ood_r: # r
@@ -45,7 +55,9 @@ if __name__ == "__main__":
             cfg.DATASET.DU.OOD.RATIO=r
             cfg.freeze()
             print("*************{} IF {}  R {} begin *************".format(cfg.DATASET.NAME,if_,r))
-            main(cfg)            
+            # main(cfg)     
+            trainer=build_trainer(cfg)     
+            trainer.train()  
             print("*************{} IF {}  R {} end *************".format(cfg.DATASET.NAME,if_,r))
         
     

@@ -1,0 +1,54 @@
+
+
+OUTPUT_DIR: "outputs/" 
+SEED : 7  
+SHOW_STEP: 100
+SAVE_EPOCH: 10
+# MAX_EPOCH: 300
+VAL_ITERATION: 500 
+MAX_ITERATION: 250000
+ALGORITHM:
+  NAME: "T2T"
+  CONFIDENCE_THRESHOLD: 0.95    
+  T2T:
+    STAGE1_STEPS: 75000
+    STAGE2_STEPS: 75000
+    FILTER_EVERY_STEP: 10000
+   
+MODEL:
+  NAME: "Resnet34" #"WRN_28_2"
+
+  OPTIMIZER:
+    TYPE: 'SGD'
+    BASE_LR: 0.03
+    MOMENTUM: 0.9
+    WEIGHT_DECAY: 5e-4 
+
+DATASET:
+  NAME: "cifar10"
+  ROOT: "./data/cifar10" 
+  NUM_CLASSES: 10
+  GROUP_SPLITS: [3,3,4]
+  DOMAIN_DATASET_RETURN_INDEX: True
+  UNLABELED_DATASET_RETURN_INDEX: True
+  LABELED_DATASET_RETURN_INDEX: True
+  IMB_TYPE: 'exp'
+  DL:
+    NUM_LABELED_HEAD: 1500
+    IMB_FACTOR_L: 50
+  DU:
+    ID:
+      NUM_UNLABELED_HEAD: 3000
+      IMB_FACTOR_UL: 50
+      REVERSE_UL_DISTRIBUTION: False
+    OOD:
+      ENABLE: True
+      DATASET: 'TIN'
+      RATIO: 0.5 #  
+    
+    UNLABELED_BATCH_RATIO: 2
+  BATCH_SIZE: 64
+  NUM_WORKERS: 0
+RESUME: '/home/aa/xlhuang/2023.1.7.openset-lt-ssl/Openset-LT-SSL/outputs/cifar10/T2T/Resnet34/DL-1500-IF-100-DU3000-IF_U-100/OOD-TIN-r-0.75/models/checkpoint.pth'
+# RESUME: '/home/aa/xlhuang/2023.1.7.openset-lt-ssl/Openset-LT-SSL/outputs/cifar10/T2T/Resnet34/DL-1500-IF-50-DU3000-IF_U-50/OOD-TIN-r-0.75/models/checkpoint.pth'
+   

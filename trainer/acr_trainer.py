@@ -9,6 +9,7 @@ import argparse
 import torch.backends.cudnn as cudnn   
 from config.defaults import update_config,_C as cfg
 import numpy as np 
+import math
 import models 
 import time 
 import torch.optim as optim 
@@ -183,10 +184,10 @@ class ACRTrainer(BaseTrainer):
         except:
             self.unlabeled_train_iter=iter(self.unlabeled_trainloader)
             data = self.unlabeled_train_iter.next() 
-        inputs_u_w, inputs_u_s, inputs_u_s1, u_real = data[0]
-         
+        inputs_u_w, inputs_u_s, inputs_u_s1, _ = data[0]
+        u_real=data[1]
         u_real = u_real.cuda()
-        mask_l = (u_real != -2)
+        mask_l = (u_real >= 0)
         mask_l = mask_l.cuda()
 
              

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     set_seed(cfg.SEED)
     cudnn.benchmark = True 
     IF=[100]
-    ood_r=[0.75]
+    ood_r=[0.5]
     for if_ in IF:   
         for r in ood_r:  
             cfg.defrost()

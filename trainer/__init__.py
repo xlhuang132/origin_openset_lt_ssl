@@ -8,3 +8,5 @@ from .supervised_trainer import SupervisedTrainer
 from .pseudolabel_trainer import PseudoLabelTrainer
 from .build_trainer import build_trainer
 from .acr_trainer import ACRTrainer
+from .t2t_trainer import T2TTrainer
+from .hooks import *
